@@ -7,6 +7,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 url_bighead = "https://www.youtube.com/@bighead033/videos"
 url_nani = "https://www.youtube.com/@user-yy5dx4lm9o/videos"
+url_gcl = "https://www.youtube.com/@GCL/videos"
 uploaded_at_stamps = {
     "second": 1 / (60 * 60),
     "seconds": 1 / (60 * 60),
@@ -16,6 +17,8 @@ uploaded_at_stamps = {
     "hours": 1,
     "day": 24,
     "days": 24,
+    "week": 24 * 7,
+    "weeks": 24 * 7,
     "month": 24 * 30,
     "months": 24 * 30,
     "year": 24 * 30 * 365,
@@ -23,10 +26,10 @@ uploaded_at_stamps = {
 }
 
 browser = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
-browser.get(url_nani)
+browser.get(url_gcl)
 action = browser.find_element(By.CSS_SELECTOR, "body")
 reached_bottom = False
-scrollY_old, scrollY_new = 0, 0
+scrollY_old = 0
 
 # 스크롤 끝까지
 while not reached_bottom:
