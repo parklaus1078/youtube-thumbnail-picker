@@ -26,7 +26,11 @@ uploaded_at_stamps = {
 }
 
 browser = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()))
-browser.get(url_gcl)
+# options = webdriver.ChromeOptions()
+# options.add_argument("--ignore-ssl-errors=yes")
+# options.add_argument("--ignore-certificate-errors")
+# browser = webdriver.Remote(command_executor="http://localhost:4444/wd/hub", options=options)
+browser.get(url_nani)
 action = browser.find_element(By.CSS_SELECTOR, "body")
 reached_bottom = False
 scrollY_old = 0
@@ -35,7 +39,7 @@ scrollY_old = 0
 while not reached_bottom:
     action.send_keys(Keys.END)
     time.sleep(2)
-    scrollY_new = browser.execute_script("return scrollY")
+    scrollY_new = browser.execute_script("scrollY")
 
     if scrollY_new == scrollY_old:
         reached_bottom = True
@@ -51,7 +55,6 @@ for i, thumbnail_element in enumerate(thumbnail_elements):
     raw_label = aria_label_elements[i].get_attribute("aria-label")
     raw_label_list.append(raw_label)
 
-    raw_label_list.append(raw_label)
     label_splited = raw_label.split("by")
     title = label_splited[0].strip()
     title_list.append(title)
