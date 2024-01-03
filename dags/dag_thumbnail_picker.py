@@ -8,6 +8,10 @@ from airflow.providers.mongo.hooks.mongo import MongoHook
 from bs4 import BeautifulSoup
 import requests
 
+url_bighead = "https://www.youtube.com/@bighead033/videos"
+url_nani = "https://www.youtube.com/@user-yy5dx4lm9o/videos"
+url_gcl = "https://www.youtube.com/@GCL/videos"
+
 with DAG(
     dag_id="dag_thumbnail_picker",
     schedule="0 10 * * *",
@@ -131,14 +135,28 @@ with DAG(
         for i in range(total_number_videos):
             video_info = ti.xcom_pull(key=f"video_{i + 1}", task_ids="task_crawl")
             video_info["creator"] = creator_name
+            ti.xcom_push(key=f"video_{i + 1}", value=video_info)
             youtube_data_table.insert_one(video_info)
-        
-    def get_view_per_hour():
-        return
+            
 
-    def get_top_five():
-        return
+    def get_top_five(ti):
+        total_number_videos = ti.xcom_pull(key="total_number_of_videos", task_ids="task_crawl")
+        creator_name = ti.xcom_pull(key="channel_owner_name", task_ids="task_crawl")
 
+        views_per_hours_dict = {}
+        for i in range(total_number_videos):
+            vid_name = f"video_{i + 1}"
+            video_info = ti.xcom_pull(key=vid_name, task_ids="task_mongo_create")
+            views_per_hours = round(float(video_info["views"]) / video_info["hours_uploaded"], 2)
+            views_per_hours_dict[views_per_hours] = video_info
+
+        views_per_hours_list = list(views_per_hours_dict.keys())
+        views_per_hours_list.sort(reverse=True)
+
+        for i in range(5):
+            vph = views_per_hours_list[i]
+            ti.xcom_push(key=f"top{i + 1}", value=views_per_hours_dict[vph])
+            
     # task_test1 = BashOperator(
     #     task_id="task_test1",
     #     bash_command="echo ping"
@@ -153,8 +171,8 @@ with DAG(
         task_id="task_crawl",
         python_callable=crawl,
         op_kwargs={
-            "url": "https://www.youtube.com/@user-yy5dx4lm9o/videos",
-            "name": "나니의 연대기"
+            "url": url_gcl,
+            "name": "GCL"
         }
     )
 
@@ -163,4 +181,9 @@ with DAG(
         python_callable=save_in_mongo,
     )
 
-    task_crawl >> task_mongo_create
+    task_get_top_fives = PythonOperator(
+        task_id="task_get_top_fives",
+        python_callable=get_top_five
+    )
+
+    task_crawl >> task_mongo_create >> task_get_top_fives
